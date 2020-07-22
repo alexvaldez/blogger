@@ -154,4 +154,27 @@ class BloggerApplicationTests {
                 .exchange()
                 .expectStatus().isBadRequest();
     }
+
+    @Test
+    void testComment() {
+        String comment = "{\"user\":\"ladyg\"," +
+                "\"comment\":\"Thank you!\"," +
+                "\"date\":\"2020-07-22\"}";
+
+        byte[] response = webTestClient.post()
+                .uri("/blogPosts/comment/" + post3.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(comment)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.comments.length()").isEqualTo(1)
+                .jsonPath("$.comments[0].user").isEqualTo("ladyg")
+                .jsonPath("$.comments[0].comment").isEqualTo("Thank you!")
+                .returnResult()
+                .getResponseBody();
+
+        logger.info(new String(response));
+    }
 }

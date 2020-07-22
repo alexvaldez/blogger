@@ -1,5 +1,6 @@
 package com.example.blogger.controller;
 
+import com.example.blogger.model.BlogComment;
 import com.example.blogger.model.BlogPost;
 import com.example.blogger.model.BlogPostRepository;
 
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/blogPosts")
@@ -55,6 +58,19 @@ public class BlogPostController {
                             oldPost.setDate(blogPost.getDate());
                             return blogPostRepository.save(oldPost);
                         })
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().build());
+    }
+
+    @PostMapping("/comment/{id}")
+    private Mono<ResponseEntity<BlogPost>> updateBlogPost(@PathVariable String id, @RequestBody BlogComment blogComment) {
+        return blogPostRepository.findById(id)
+                .flatMap(oldPost -> {
+                    if (oldPost.getComments() == null)
+                        oldPost.setComments(new ArrayList<BlogComment>());
+                    oldPost.getComments().add(blogComment);
+                    return blogPostRepository.save(oldPost);
+                })
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().build());
     }
