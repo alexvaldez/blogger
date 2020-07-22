@@ -40,7 +40,7 @@ public class BlogPostRepositoryTests {
 
     @AfterEach
     void tearDown() {
-        blogPostRepository.deleteAll();
+        blogPostRepository.deleteAll().block();
     }
 
     @Test

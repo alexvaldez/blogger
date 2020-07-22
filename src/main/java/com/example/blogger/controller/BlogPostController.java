@@ -3,6 +3,8 @@ package com.example.blogger.controller;
 import com.example.blogger.model.BlogPost;
 import com.example.blogger.model.BlogPostRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,8 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/blogPosts")
 public class BlogPostController {
 
+    private static final Logger logger = LoggerFactory.getLogger(BlogPostController.class);
+
     @Autowired
     private BlogPostRepository blogPostRepository;
 
@@ -31,6 +35,10 @@ public class BlogPostController {
         return blogPostRepository.findAll();
     }
 
+    @PostMapping
+    private Mono<BlogPost> createBlogPost(@RequestBody BlogPost blogPost) {
+        return blogPostRepository.save(blogPost);
+    }
     @PostMapping("/update")
     private Mono<BlogPost> updateBlogPost(@RequestBody BlogPost blogPost) {
         return blogPostRepository.save(blogPost);
