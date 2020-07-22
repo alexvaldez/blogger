@@ -3,8 +3,10 @@ package com.example.blogger;
 import com.example.blogger.model.BlogPost;
 import com.example.blogger.model.BlogPostRepository;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,11 +41,13 @@ class BloggerApplicationTests {
     WebTestClient webTestClient;
 
     @BeforeEach
-    void setup() {
+    void setup() throws ParseException {
         blogPostRepository.deleteAll().block();
-        post1 = new BlogPost(null, "joebloggs", "My first post", "Look at me, I can blog!", new Date(), null);
-        post2 = new BlogPost(null, "joebloggs", "My second post", "Now we're cooking!", new Date(), null);
-        post3 = new BlogPost(null, "drumpf", "Covfefe", "Tweet tweet", new Date(), null);
+
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+        post1 = new BlogPost(null, "joebloggs", "My first post", "Look at me, I can blog!", format.parse("21-Jul-2020"), null);
+        post2 = new BlogPost(null, "joebloggs", "My second post", "Now we're cooking!", format.parse("22-Jul-2020"), null);
+        post3 = new BlogPost(null, "drumpf", "Covfefe", "Tweet tweet", format.parse("22-Jul-2020"), null);
         blogPostRepository.saveAll(Flux.just(post1, post2, post3)).blockLast();
     }
 
@@ -86,13 +90,18 @@ class BloggerApplicationTests {
 
     @Test
     void testGetByUser() {
+        String user = "joebloggs";
         byte[] response = webTestClient.get()
-                .uri("/blogPosts/byUser/joebloggs")
+                .uri("/blogPosts/byUser/" + user)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[0].user").isEqualTo(user)
+                .jsonPath("$[1].user").isEqualTo(user)
+                .jsonPath("$[0].title").isEqualTo("My second post")
+                .jsonPath("$[1].title").isEqualTo("My first post")
                 .returnResult()
                 .getResponseBody();
 

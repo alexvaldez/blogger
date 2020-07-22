@@ -7,6 +7,7 @@ import com.example.blogger.model.BlogPostRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +42,7 @@ public class BlogPostController {
 
     @GetMapping("/byUser/{user}")
     private Flux<BlogPost> getPostsByUser(@PathVariable String user) {
-        return blogPostRepository.findByUser(user);
+        return blogPostRepository.findByUser(user, Sort.by(Sort.Direction.DESC, "date"));
     }
 
     @PostMapping

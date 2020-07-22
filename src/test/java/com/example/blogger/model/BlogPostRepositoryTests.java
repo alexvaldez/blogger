@@ -12,12 +12,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 @ExtendWith(SpringExtension.class)
 @EnableAutoConfiguration
@@ -32,10 +36,11 @@ public class BlogPostRepositoryTests {
     private BlogPost post1, post2, post3;
 
     @BeforeEach
-    void setup() {
-        post1 = new BlogPost(null, "joebloggs", "My first post", "Look at me, I can blog!", new Date(), null);
-        post2 = new BlogPost(null, "joebloggs", "My second post", "Now we're cooking!", new Date(), null);
-        post3 = new BlogPost(null, "drumpf", "Covfefe", "Tweet tweet", new Date(), null);
+    void setup() throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+        post1 = new BlogPost(null, "joebloggs", "My first post", "Look at me, I can blog!", format.parse("21-Jul-2020"), null);
+        post2 = new BlogPost(null, "joebloggs", "My second post", "Now we're cooking!", format.parse("22-Jul-2020"), null);
+        post3 = new BlogPost(null, "drumpf", "Covfefe", "Tweet tweet", format.parse("22-Jul-2020"), null);
     }
 
     @AfterEach
@@ -65,12 +70,14 @@ public class BlogPostRepositoryTests {
                           .blockLast();
 
         // when
-        List<BlogPost> posts = blogPostRepository.findByUser("joebloggs")
+        List<BlogPost> posts = blogPostRepository.findByUser("joebloggs", Sort.by(Sort.Direction.DESC, "date"))
                                                  .collectList()
                                                  .block();
 
         // then
         logger.info(String.valueOf(posts));
         assertEquals(2 , posts.size());
+        assertEquals("My second post", posts.get(0).getTitle());
+        assertEquals("My first post", posts.get(1).getTitle());
     }
 }
