@@ -27,12 +27,9 @@ class BloggerApplicationTests {
     @BeforeEach
     void setup() {
         blogPostRepository.deleteAll();
-        post1 = blogPostRepository.save(new BlogPost(null, "joebloggs", "My first post",
-                    "Look at me, I can blog!", new Date(), null));
-        post2 = blogPostRepository.save(new BlogPost(null, "joebloggs", "My second post",
-                    "Now we're cooking!", new Date(), null));
-        post3 = blogPostRepository.save(new BlogPost(null, "drumpf", "Covfefe",
-                    "Tweet tweet", new Date(), null));
+        post1 = new BlogPost(null, "joebloggs", "My first post", "Look at me, I can blog!", new Date(), null);
+        post2 = new BlogPost(null, "joebloggs", "My second post", "Now we're cooking!", new Date(), null);
+        post3 = new BlogPost(null, "drumpf", "Covfefe", "Tweet tweet", new Date(), null);
     }
 
     @Test
@@ -40,7 +37,7 @@ class BloggerApplicationTests {
         // given
 
         // when
-        BlogPost blogPost = blogPostRepository.save(post1);
+        BlogPost blogPost = blogPostRepository.save(post1).block();
 
         //then
 	assertNotNull(blogPost.getId());
@@ -52,12 +49,14 @@ class BloggerApplicationTests {
     @Test
     void testFindByUser() {
         // given
-        blogPostRepository.save(post1);
-        blogPostRepository.save(post2);
-        blogPostRepository.save(post3);
+        blogPostRepository.save(post1).block();
+        blogPostRepository.save(post2).block();
+        blogPostRepository.save(post3).block();
 
         // when
-        List<BlogPost> posts = blogPostRepository.findByUser("joebloggs");
+        List<BlogPost> posts = blogPostRepository.findByUser("joebloggs")
+                                                 .collectList()
+                                                 .block();
 
         // then
 	assertEquals(2 , posts.size());
