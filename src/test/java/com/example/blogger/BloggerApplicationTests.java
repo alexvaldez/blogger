@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -82,6 +83,75 @@ class BloggerApplicationTests {
 
         logger.info(new String(response));
     }
-    // [{"id":"5f188c7a000ffc7553742bcb","user":"joebloggs","title":"My second post","content":"Now we're cooking!","date":"2020-07-22T18:59:06.735+00:00","comments":null},{"id":"5f188c7a000ffc7553742bca","user":"joebloggs","title":"My first post","content":"Look at me, I can blog!","date":"2020-07-22T18:59:06.734+00:00","comments":null},{"id":"5f188c7a000ffc7553742bcc","user":"drumpf","title":"Covfefe","content":"Tweet tweet","date":"2020-07-22T18:59:06.735+00:00","comments":null}]
 
+    @Test
+    void testGetByUser() {
+        byte[] response = webTestClient.get()
+                .uri("/blogPosts/byUser/joebloggs")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .returnResult()
+                .getResponseBody();
+
+        logger.info(new String(response));
+    }
+
+    @Test
+    void testGetById() {
+        byte[] response = webTestClient.get()
+                .uri("/blogPosts/" + post3.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.user").isEqualTo(post3.getUser())
+                .jsonPath("$.title").isEqualTo(post3.getTitle())
+                .jsonPath("$.content").isEqualTo(post3.getContent())
+                .returnResult()
+                .getResponseBody();
+
+        logger.info(new String(response));
+    }
+
+    @Test
+    void testUpdate() {
+        String post = "{\"user\":\"joebloggs\"," +
+                "\"title\":\"How now, brown cow\"," +
+                "\"content\":\"Mr. Brown can moo, can you?\"," +
+                "\"date\":\"2020-07-22\"}";
+
+        byte[] response = webTestClient.post()
+                .uri("/blogPosts/update/" + post1.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(post)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("How now, brown cow")
+                .jsonPath("$.content").isEqualTo("Mr. Brown can moo, can you?")
+                .returnResult()
+                .getResponseBody();
+
+        logger.info(new String(response));
+    }
+
+    @Test
+    void testBadUpdate() {
+        String post = "{\"user\":\"joebloggs\"," +
+                "\"title\":\"How now, brown cow\"," +
+                "\"content\":\"Mr. Brown can moo, can you?\"," +
+                "\"date\":\"2020-07-22\"}";
+
+        webTestClient.post()
+                .uri("/blogPosts/update/badbadbad")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(post)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
 }
